@@ -9,12 +9,16 @@ app = Flask(__name__)
 # ==========================================================================
 # REDIS CLOUD DATABASE CONFIGURATION
 # ==========================================================================
-# Grabs the REDIS_URL environment variable you set up on Render.
-# Uses secure 'rediss://' prefix to encrypt data traveling over the internet.
-REDIS_URL = os.environ.get('REDIS_URL', 'rediss://your-rolled-upstash-url-here')
-redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://your-default-upstash-url-here')
 
-# The single key where your entire leaderboard list is stored inside Redis
+# Fix: Explicitly enforce SSL when talking to a secure cloud provider like Upstash
+if REDIS_URL.startswith("rediss://"):
+    # If the URL already has rediss://, from_url automatically configures SSL
+    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+else:
+    # If it starts with redis://, manually add the ssl parameters to force encryption
+    redis_client = redis.Redis.from_url(REDIS_URL, ssl=True, ssl_cert_reqs=None, decode_responses=True)
+
 REDIS_KEY = "stopwatch_leaderboard"
 
 def load_leaderboard():
