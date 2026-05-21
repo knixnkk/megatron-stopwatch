@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Megatron Debugger — Leaderboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="shell">
+
+    <!-- ── TOP BAR ── -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-back" aria-label="Go back">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M11 4L6 9L11 14" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="topbar-title">
+          <span class="title-main">Megatron Debugger: Leaderboard</span>
+          <span class="title-sep">|</span>
+          <span class="title-sub">First Gen Sprint</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <!-- STOP -->
+        <button class="btn-circle" id="btn-stop" aria-label="Stop">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="2" y="2" width="10" height="10" rx="1" fill="#fff"/>
+          </svg>
+        </button>
+        <!-- RESET -->
+        <button class="btn-circle" id="btn-reset" aria-label="Reset">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M13 8A5 5 0 1 1 8 3H11M11 3L13.5 5.5M11 3L8.5 5.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── INFO TABLE ── -->
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th>System Status</th>
+          <th>Required Input</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="status-cell">MEGATRON_SYSTEM_READY</td>
+          <td id="input-cell">Select language to begin.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── MAIN BODY ── -->
+    <main class="body-area">
+
+      <!-- LEADERBOARD -->
+      <section class="lb-section">
+        <p class="section-label">Top 5 — First Gen Sprint</p>
+        <div class="lb-card">
+          <div class="lb-header-row">
+            <span>Rank</span>
+            <span>Handle</span>
+            <span>Lang</span>
+            <span>Time</span>
+          </div>
+          {% for entry in leaderboard %}
+          <div class="lb-row {% if entry.rank == 1 %}lb-row--first{% endif %}">
+            <span class="lb-rank">
+              {% if entry.rank == 1 %}
+                <svg class="crown" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 10L3 5L7 8L11 5L13 10H1Z" fill="#000"/>
+                </svg>
+              {% else %}
+                {{ entry.rank }}
+              {% endif %}
+            </span>
+            <span class="lb-handle">{{ entry.handle }}</span>
+            <span class="lb-lang">{{ entry.lang }}</span>
+            <span class="lb-time">{{ entry.time }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- TIME DISPLAY -->
+      <section class="display-section">
+        <div class="display-block">
+          <p class="display-label">Time</p>
+          <p class="display-value" id="timer-display">0:00.00</p>
+        </div>
+        <div class="display-divider"></div>
+        <div class="display-block">
+          <p class="display-label">Best</p>
+          <p class="display-value display-value--best" id="best-display">0:09.12</p>
+        </div>
+      </section>
+
+      <!-- ACTION ROW 1: FLOW -->
+      <section class="action-row">
+        <button class="btn-circle-sm btn-nav" id="btn-prev" aria-label="Previous">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 13L5 8L10 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="btn-select" id="btn-select">Select</button>
+        <button class="btn-circle-sm btn-nav" id="btn-next" aria-label="Next">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3L11 8L6 13" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </section>
+
+      <!-- ACTION ROW 2: LANGUAGE -->
+      <section class="lang-row">
+        <span class="lang-label">Language</span>
+        <div class="lang-btns">
+          <button class="btn-lang btn-lang--active" id="btn-c" data-lang="C">C</button>
+          <button class="btn-lang" id="btn-py" data-lang="Python">Python</button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── FOOTER BAR ── -->
+    <footer class="footbar">
+      <span class="foot-text">MEGATRON DEBUG SYS v1.0</span>
+      <span class="foot-text" id="foot-clock">--:--:--</span>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
