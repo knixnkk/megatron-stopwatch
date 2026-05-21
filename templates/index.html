@@ -2,138 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Megatron Debugger — Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Megatron | Stopwatch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-  <div class="shell">
-
-    <!-- ── TOP BAR ── -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="btn-back" aria-label="Go back">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11 4L6 9L11 14" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="topbar-title">
-          <span class="title-main">Megatron Debugger: Leaderboard</span>
-          <span class="title-sep">|</span>
-          <span class="title-sub">First Gen Sprint</span>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <!-- STOP -->
-        <button class="btn-circle" id="btn-stop" aria-label="Stop">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="2" y="2" width="10" height="10" rx="1" fill="#fff"/>
-          </svg>
-        </button>
-        <!-- RESET -->
-        <button class="btn-circle" id="btn-reset" aria-label="Reset">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M13 8A5 5 0 1 1 8 3H11M11 3L13.5 5.5M11 3L8.5 5.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="title">MEGATRON</h1>
+        <button class="btn-reset" id="btn-reset" title="Reset data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M3 21v-5h5"/>
           </svg>
         </button>
       </div>
     </header>
 
-    <!-- ── INFO TABLE ── -->
-    <table class="info-table">
-      <thead>
-        <tr>
-          <th>System Status</th>
-          <th>Required Input</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td id="status-cell">MEGATRON_SYSTEM_READY</td>
-          <td id="input-cell">Select language to begin.</td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Main Content -->
+<main class="content">
+  <!-- Stopwatch Section -->
+  <section class="stopwatch-section">
+    <div class="timer-display" id="timer-display">00:00.00</div>
+    
+    <div class="controls">
+      <button class="btn btn-start" id="btn-start">START</button>
+      <button class="btn btn-stop" id="btn-stop-timer" disabled>STOP</button>
+    </div>
 
-    <!-- ── MAIN BODY ── -->
-    <main class="body-area">
-
-      <!-- LEADERBOARD -->
-      <section class="lb-section">
-        <p class="section-label">Top 5 — First Gen Sprint</p>
-        <div class="lb-card">
-          <div class="lb-header-row">
-            <span>Rank</span>
-            <span>Handle</span>
-            <span>Lang</span>
-            <span>Time</span>
-          </div>
-          {% for entry in leaderboard %}
-          <div class="lb-row {% if entry.rank == 1 %}lb-row--first{% endif %}">
-            <span class="lb-rank">
-              {% if entry.rank == 1 %}
-                <svg class="crown" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M1 10L3 5L7 8L11 5L13 10H1Z" fill="#000"/>
-                </svg>
-              {% else %}
-                {{ entry.rank }}
-              {% endif %}
-            </span>
-            <span class="lb-handle">{{ entry.handle }}</span>
-            <span class="lb-lang">{{ entry.lang }}</span>
-            <span class="lb-time">{{ entry.time }}</span>
-          </div>
-          {% endfor %}
+    <!-- Language Selector & Separate Leaderboard Area -->
+    <div class="language-selector-zone">
+      <div class="language-selector">
+        <button class="lang-btn active" id="btn-c" data-lang="C">C</button>
+        <button class="lang-btn" id="btn-py" data-lang="Python">Python</button>
+      </div>
+      
+      <!-- Sub-Leaderboard for selected language only -->
+      <div class="sub-leaderboard">
+        <div class="sub-leaderboard-header">
+          <span class="col-rank">Rank</span>
+          <span class="col-name">Name</span>
+          <span class="col-q">Q#</span>
+          <span class="col-time">Time</span>
         </div>
-      </section>
-
-      <!-- TIME DISPLAY -->
-      <section class="display-section">
-        <div class="display-block">
-          <p class="display-label">Time</p>
-          <p class="display-value" id="timer-display">0:00.00</p>
+        <div id="sub-leaderboard-container" class="leaderboard-body">
+          <!-- Populated by JS filtered streams -->
         </div>
-        <div class="display-divider"></div>
-        <div class="display-block">
-          <p class="display-label">Best</p>
-          <p class="display-value display-value--best" id="best-display">0:09.12</p>
-        </div>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <!-- ACTION ROW 1: FLOW -->
-      <section class="action-row">
-        <button class="btn-circle-sm btn-nav" id="btn-prev" aria-label="Previous">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 13L5 8L10 3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="btn-select" id="btn-select">Select</button>
-        <button class="btn-circle-sm btn-nav" id="btn-next" aria-label="Next">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3L11 8L6 13" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </section>
+  <!-- Main Combined Leaderboard Section -->
+  <section class="leaderboard-section">
+    <h2 class="section-title">Global Standings</h2>
+    <div class="leaderboard">
+      <div class="leaderboard-header">
+        <span class="col-rank">Rank</span>
+        <span class="col-name">Name</span>
+        <span class="col-lang">Lang</span>
+        <span class="col-q">Q#</span>
+        <span class="col-time">Time</span>
+      </div>
+      <div id="leaderboard-container" class="leaderboard-body">
+        <!-- Main dynamic backend loop insertion -->
+      </div>
+    </div>
+  </section>
+</main>
 
-      <!-- ACTION ROW 2: LANGUAGE -->
-      <section class="lang-row">
-        <span class="lang-label">Language</span>
-        <div class="lang-btns">
-          <button class="btn-lang btn-lang--active" id="btn-c" data-lang="C">C</button>
-          <button class="btn-lang" id="btn-py" data-lang="Python">Python</button>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- ── FOOTER BAR ── -->
-    <footer class="footbar">
-      <span class="foot-text">MEGATRON DEBUG SYS v1.0</span>
-      <span class="foot-text" id="foot-clock">--:--:--</span>
+    <!-- Status Bar -->
+    <footer class="status-bar">
+      <span id="status-text">Ready</span>
     </footer>
+  </div>
 
+  <!-- Modal -->
+  <div class="modal" id="result-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>Save Result</h2>
+      </div>
+      <form id="result-form" class="modal-form">
+        <div class="form-field">
+          <label for="player-name">Name</label>
+          <input type="text" id="player-name" placeholder="Your name" required autocomplete="off" />
+        </div>
+        <div class="form-field">
+          <label for="question-no">Question #</label>
+          <input type="text" id="question-no" placeholder="Q1" required autocomplete="off" />
+        </div>
+        <div class="form-field">
+          <label for="result-time">Time</label>
+          <input type="text" id="result-time" disabled />
+        </div>
+        <div class="form-field">
+          <label for="result-lang">Language</label>
+          <select id="result-lang" required>
+            <option value="C">C</option>
+            <option value="Python">Python</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-action cancel" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-action save">Save</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

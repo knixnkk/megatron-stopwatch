@@ -1,4 +1,4 @@
-# Megatron Debugger — Leaderboard UI
+# Megatron | Stopwatch — Leaderboard UI
 
 Stark white/black minimalist FPV-style debugging leaderboard.
 Built with Flask + Jinja2 templates + vanilla JS.
