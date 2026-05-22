@@ -1,61 +1,61 @@
 from flask import Flask, render_template, jsonify, request
-import json
 import os
 from datetime import datetime
-import redis
+from pymongo import MongoClient, DESCENDING, ASCENDING
+from pymongo.errors import ConfigurationError
+import sys
 
 app = Flask(__name__)
 
-# ==========================================================================
-# REDIS CLOUD DATABASE CONFIGURATION
-# ==========================================================================
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://your-default-upstash-url-here')
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/megatron_db')
 
-# Fix: Explicitly enforce SSL when talking to a secure cloud provider like Upstash
-if REDIS_URL.startswith("rediss://"):
-    # If the URL already has rediss://, from_url automatically configures SSL
-    redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
-else:
-    # If it starts with redis://, manually add the ssl parameters to force encryption
-    redis_client = redis.Redis.from_url(REDIS_URL, ssl=True, ssl_cert_reqs=None, decode_responses=True)
-
-REDIS_KEY = "stopwatch_leaderboard"
-
-def load_leaderboard():
-    """Load leaderboard from Redis string key"""
+try:
+    mongo_client = MongoClient(MONGO_URI)
     try:
-        raw_data = redis_client.get(REDIS_KEY)
-        if raw_data:
-            return json.loads(raw_data)
-        return []
+        db = mongo_client.get_default_database()
+    except ConfigurationError:
+        db = mongo_client["megatron_db"]
+        
+    leaderboard_collection = db["leaderboard"]
+    leaderboard_collection.create_index([("time_ms", ASCENDING)])
+    print(f"Successfully connected to database: '{db.name}' on Cluster0!")
+    
+except Exception as e:
+    print(f"Database Initialization Critical Error: {e}")
+    sys.exit(1)
+
+
+def get_ranked_leaderboard():
+    try:
+        entries = list(leaderboard_collection.find({}, {"_id": 0}).sort("time_ms", ASCENDING))
+        
+        for idx, entry in enumerate(entries):
+            entry["rank"] = idx + 1
+        return entries
     except Exception as e:
         print(f"Database Read Error: {e}")
         return []
 
-def save_leaderboard(data):
-    """Save leaderboard to Redis string key"""
-    try:
-        redis_client.set(REDIS_KEY, json.dumps(data))
-    except Exception as e:
-        print(f"Database Write Error: {e}")
 
 def format_time(ms):
-    """Convert milliseconds to MM:SS.MS format"""
     total_sec = ms / 1000
     minutes = int(total_sec // 60)
     seconds = int(total_sec % 60)
     milliseconds = int(ms % 1000)
     return f"{minutes}:{seconds:02d}.{milliseconds:02d}"
 
+
 @app.route("/")
 def index():
-    leaderboard = load_leaderboard()
+    leaderboard = get_ranked_leaderboard()
     return render_template("index.html", leaderboard=leaderboard)
+
 
 @app.route("/api/leaderboard")
 def api_leaderboard():
-    leaderboard = load_leaderboard()
+    leaderboard = get_ranked_leaderboard()
     return jsonify(leaderboard)
+
 
 @app.route("/api/save-result", methods=["POST"])
 def save_result():
@@ -64,15 +64,13 @@ def save_result():
         data = request.get_json()
         name = data.get("name", "Unknown").strip()
         question_no = data.get("question_no", "0").strip()
-        time_ms = data.get("time_ms", 0)
+        time_ms = int(data.get("time_ms", 0))
         lang = data.get("lang", "Unknown")
         
         if not name or time_ms <= 0:
             return jsonify({"status": "error", "message": "Invalid data"}), 400
         
-        leaderboard = load_leaderboard()
-        
-        # Add new entry
+        # Prepare document structure
         new_entry = {
             "name": name,
             "question_no": question_no,
@@ -82,33 +80,33 @@ def save_result():
             "timestamp": datetime.now().isoformat()
         }
         
-        leaderboard.append(new_entry)
+        # Insert document into MongoDB Collection
+        leaderboard_collection.insert_one(new_entry.copy())
         
-        # Sort by time (fastest first)
-        leaderboard.sort(key=lambda x: x["time_ms"])
-        
-        # Add ranks
-        for idx, entry in enumerate(leaderboard):
-            entry["rank"] = idx + 1
-        
-        save_leaderboard(leaderboard)
+        # Pull down updated leaderboard to find this user's current exact rank
+        updated_leaderboard = get_ranked_leaderboard()
         
         # Find the specific entry's calculated rank to return safely
-        current_rank = next(item["rank"] for item in leaderboard if item["time_ms"] == time_ms and item["name"] == name)
+        current_rank = next(
+            item["rank"] for item in updated_leaderboard 
+            if item["time_ms"] == time_ms and item["name"] == name
+        )
         
         return jsonify({"status": "ok", "entry": new_entry, "rank": current_rank})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 @app.route("/api/reset", methods=["POST"])
 def api_reset():
     """Clear all leaderboard data"""
     try:
-        # Deletes the string key entirely out of the cache database instance
-        redis_client.delete(REDIS_KEY)
+        # Deletes every document out of the collection
+        leaderboard_collection.delete_many({})
         return jsonify({"status": "ok", "message": "Leaderboard cleared."})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
