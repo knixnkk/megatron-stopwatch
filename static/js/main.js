@@ -56,6 +56,22 @@ function startTimer() {
   if (statusText) statusText.textContent = 'Timer running...';
 }
 
+function deriveLangFromQuestion(questionNo) {
+  const match = String(questionNo).trim().toUpperCase().match(/^Q0*([0-9]{1,2})$/);
+  if (!match) {
+    return 'Unknown';
+  }
+
+  const questionNumber = Number(match[1]);
+  if (questionNumber >= 1 && questionNumber <= 10) {
+    return 'C';
+  }
+  if (questionNumber >= 11 && questionNumber <= 20) {
+    return 'Python';
+  }
+  return 'Unknown';
+}
+
 function stopTimer() {
   if (!running) return;
   running = false;
@@ -68,7 +84,9 @@ function stopTimer() {
   
   // Bind run variables inside modal components
   document.getElementById('result-time').value = msToDisplay(elapsed);
-  document.getElementById('result-lang').value = selectedLang;
+  const questionNo = document.getElementById('question-no').value.trim();
+  const computedLang = deriveLangFromQuestion(questionNo);
+  document.getElementById('result-lang').value = computedLang;
   document.getElementById('player-name').value = '';
   const passwordInput = document.getElementById('save-password');
   if (passwordInput) passwordInput.value = '';
@@ -224,7 +242,7 @@ resultForm.addEventListener('submit', async (e) => {
   // Ensure animation stops and capture the currently displayed question number
   stopQuestionAnimation();
   const questionNo = document.getElementById('question-no').value.trim();
-  const lang = document.getElementById('result-lang').value;
+  const lang = deriveLangFromQuestion(questionNo);
   const password = document.getElementById('save-password').value.trim();
   
   if (!name || !questionNo || !password) {

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import os
+import re
 from datetime import datetime
 from pymongo import MongoClient, DESCENDING, ASCENDING
 from pymongo.errors import ConfigurationError
@@ -46,6 +47,22 @@ def format_time(ms):
     return f"{minutes}:{seconds:02d}.{milliseconds:02d}"
 
 
+def derive_lang_from_question(question_no):
+    if not isinstance(question_no, str):
+        return "Unknown"
+    normalized = question_no.strip().upper()
+    match = re.match(r"^Q0*([0-9]{1,2})$", normalized)
+    if not match:
+        return "Unknown"
+
+    question_number = int(match.group(1))
+    if 1 <= question_number <= 10:
+        return "C"
+    if 11 <= question_number <= 20:
+        return "Python"
+    return "Unknown"
+
+
 @app.route("/")
 def index():
     leaderboard = get_ranked_leaderboard()
@@ -66,8 +83,8 @@ def save_result():
         name = data.get("name", "Unknown").strip()
         question_no = data.get("question_no", "0").strip()
         time_ms = int(data.get("time_ms", 0))
-        lang = data.get("lang", "Unknown")
         password = data.get("password", "").strip()
+        lang = derive_lang_from_question(question_no)
         
         if password != SAVE_PASSWORD:
             return jsonify({"status": "error", "message": "Invalid password"}), 401
