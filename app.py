@@ -70,7 +70,7 @@ def save_result():
         password = data.get("password", "").strip()
         
         if password != SAVE_PASSWORD:
-            return jsonify({"status": "error", "message": "Incorrect password"}), 401
+            return jsonify({"status": "error", "message": "Invalid password"}), 401
         
         if not name or time_ms <= 0:
             return jsonify({"status": "error", "message": "Invalid data"}), 400

@@ -65,16 +65,22 @@
   <!-- Main Combined Leaderboard Section -->
   <section class="leaderboard-section">
     <h2 class="section-title">Global Standings</h2>
-    <div class="leaderboard">
-      <div class="leaderboard-header">
-        <span class="col-rank">Rank</span>
-        <span class="col-name">Name</span>
-        <span class="col-lang">Lang</span>
-        <span class="col-q">Q#</span>
-        <span class="col-time">Time</span>
-      </div>
-      <div id="leaderboard-container" class="leaderboard-body">
-        <!-- Main dynamic backend loop insertion -->
+    <div class="leaderboard-panel">
+      <aside class="leaderboard-aside">
+        <img src="{{ url_for('static', filename='images/qrcode.png') }}" alt="Club promo QR code" class="leaderboard-qr" />
+        <p class="qr-caption">Scan to join our club and promote the leaderboard community.</p>
+      </aside>
+      <div class="leaderboard">
+        <div class="leaderboard-header">
+          <span class="col-rank">Rank</span>
+          <span class="col-name">Name</span>
+          <span class="col-lang">Lang</span>
+          <span class="col-q">Q#</span>
+          <span class="col-time">Time</span>
+        </div>
+        <div id="leaderboard-container" class="leaderboard-body">
+          <!-- Main dynamic backend loop insertion -->
+        </div>
       </div>
     </div>
   </section>
