@@ -33,8 +33,11 @@
     <div class="timer-display" id="timer-display">00:00.00</div>
     
     <div class="controls">
-      <button class="btn btn-start" id="btn-start">START</button>
-      <button class="btn btn-stop" id="btn-stop-timer" disabled>STOP</button>
+      <button class="btn btn-random" id="btn-random">RANDOM</button>
+      <div id="timer-controls" style="display: none;">
+        <button class="btn btn-start" id="btn-start">START</button>
+        <button class="btn btn-stop" id="btn-stop-timer" disabled>STOP</button>
+      </div>
     </div>
 
     <!-- Language Selector & Separate Leaderboard Area -->
@@ -97,7 +100,7 @@
         </div>
         <div class="form-field">
           <label for="question-no">Question #</label>
-          <input type="text" id="question-no" placeholder="Q1" required autocomplete="off" />
+          <input type="text" id="question-no" placeholder="Q1" required autocomplete="off" readonly />
         </div>
         <div class="form-field">
           <label for="result-time">Time</label>
@@ -109,6 +112,10 @@
             <option value="C">C</option>
             <option value="Python">Python</option>
           </select>
+        </div>
+        <div class="form-field">
+          <label for="save-password">Password</label>
+          <input type="password" id="save-password" placeholder="Enter password" required autocomplete="off" />
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-action cancel" id="btn-cancel">Cancel</button>

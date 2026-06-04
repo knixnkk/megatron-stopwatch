@@ -9,11 +9,15 @@ let startTime = 0;
 let elapsed = 0;
 let selectedLang = 'C';
 let globalLeaderboardCache = []; // Local cache to allow dynamic sub-filtering without slamming network queries
+let questionAnimInterval = null;
+let currentQuestionNumber = 0;
 
 const timerDisplay = document.getElementById('timer-display');
 const statusText = document.getElementById('status-text');
 const btnStart = document.getElementById('btn-start');
 const btnStop = document.getElementById('btn-stop-timer');
+const btnRandom = document.getElementById('btn-random');
+const timerControls = document.getElementById('timer-controls');
 const modal = document.getElementById('result-modal');
 const resultForm = document.getElementById('result-form');
 
@@ -41,6 +45,7 @@ function startTimer() {
   btnStart.disabled = true;
   btnStop.disabled = false;
   
+  timerDisplay.textContent = '00:00.00';
   timerInterval = setInterval(() => {
     elapsed = Date.now() - startTime;
     timerDisplay.textContent = msToDisplay(elapsed);
@@ -63,10 +68,42 @@ function stopTimer() {
   document.getElementById('result-time').value = msToDisplay(elapsed);
   document.getElementById('result-lang').value = selectedLang;
   document.getElementById('player-name').value = '';
-  document.getElementById('question-no').value = '';
-  
+  const passwordInput = document.getElementById('save-password');
+  if (passwordInput) passwordInput.value = '';
+
   modal.classList.add('active');
   document.getElementById('player-name').focus();
+}
+
+/**
+ * Starts the animated question picker which cycles random numbers 00-20
+ * and displays them in the `question-no` field while the modal is open.
+ */
+function startQuestionAnimation() {
+  const qInput = document.getElementById('question-no');
+  if (!qInput) return;
+
+  // ensure we have an initial value
+  currentQuestionNumber = Math.floor(Math.random() * 21);
+  const questionString = `Q${String(currentQuestionNumber).padStart(2, '0')}`;
+  qInput.value = questionString;
+  if (timerDisplay) timerDisplay.textContent = questionString;
+
+  // Quick randomized flicker to mimic a matrix-like runner
+  stopQuestionAnimation();
+  questionAnimInterval = setInterval(() => {
+    currentQuestionNumber = Math.floor(Math.random() * 21);
+    const randomQuestionString = `Q${String(currentQuestionNumber).padStart(2, '0')}`;
+    qInput.value = randomQuestionString;
+    if (timerDisplay) timerDisplay.textContent = randomQuestionString;
+  }, 60);
+}
+
+function stopQuestionAnimation() {
+  if (questionAnimInterval) {
+    clearInterval(questionAnimInterval);
+    questionAnimInterval = null;
+  }
 }
 
 function resetTimer() {
@@ -99,21 +136,54 @@ document.getElementById('btn-cancel').addEventListener('click', () => {
   timerDisplay.textContent = '00:00.00';
   if (statusText) statusText.textContent = 'Ready';
   elapsed = 0;
+  stopQuestionAnimation();
+  const qInput = document.getElementById('question-no');
+  if (qInput) qInput.value = '';
+  const passwordInput = document.getElementById('save-password');
+  if (passwordInput) passwordInput.value = '';
+  if (timerControls) timerControls.style.display = 'none';
+  if (btnRandom) btnRandom.disabled = false;
 });
 
 // Modal mask target safety click-away layer rule
 modal.querySelector('.modal-overlay')?.addEventListener('click', () => {
   modal.classList.remove('active');
+  stopQuestionAnimation();
+  const qInput = document.getElementById('question-no');
+  if (qInput) qInput.value = '';
+  const passwordInput = document.getElementById('save-password');
+  if (passwordInput) passwordInput.value = '';
+  if (timerControls) timerControls.style.display = 'none';
+  if (btnRandom) btnRandom.disabled = false;
 });
+
+// Random picker: animate for ~3s then reveal start/stop controls
+if (btnRandom) {
+  btnRandom.addEventListener('click', () => {
+    btnRandom.disabled = true;
+    startQuestionAnimation();
+    if (statusText) statusText.textContent = 'Picking question...';
+
+    setTimeout(() => {
+      stopQuestionAnimation();
+      if (timerControls) timerControls.style.display = 'flex';
+      if (statusText) statusText.textContent = 'Question ready. Press START when ready.';
+      if (btnStart) btnStart.focus();
+    }, 3000);
+  });
+}
 
 resultForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   const name = document.getElementById('player-name').value.trim();
+  // Ensure animation stops and capture the currently displayed question number
+  stopQuestionAnimation();
   const questionNo = document.getElementById('question-no').value.trim();
   const lang = document.getElementById('result-lang').value;
+  const password = document.getElementById('save-password').value.trim();
   
-  if (!name || !questionNo) {
+  if (!name || !questionNo || !password) {
     alert('Please fill in all fields');
     return;
   }
@@ -126,7 +196,8 @@ resultForm.addEventListener('submit', async (e) => {
         name: name,
         question_no: questionNo,
         time_ms: elapsed,
-        lang: lang
+        lang: lang,
+        password: password
       })
     });
     
@@ -142,6 +213,11 @@ resultForm.addEventListener('submit', async (e) => {
       // Cleanup timer tracking environment state
       timerDisplay.textContent = '00:00.00';
       elapsed = 0;
+      // Reset UI: hide timer controls and re-enable random picker
+      if (timerControls) timerControls.style.display = 'none';
+      if (btnRandom) { btnRandom.disabled = false; btnRandom.focus(); }
+      const qInput = document.getElementById('question-no'); if (qInput) qInput.value = '';
+      const passwordInput = document.getElementById('save-password'); if (passwordInput) passwordInput.value = '';
     } else {
       alert('Error saving result: ' + data.message);
     }
@@ -284,5 +360,8 @@ if (btnHeaderStop) {
 
 // Initialise core elements on container load completion
 document.addEventListener('DOMContentLoaded', () => {
+  // hide timer controls until a random pick is made
+  if (timerControls) timerControls.style.display = 'none';
+  if (btnRandom) btnRandom.disabled = false;
   refreshLeaderboard();
 });
