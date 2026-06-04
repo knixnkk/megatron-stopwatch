@@ -20,6 +20,8 @@ const btnRandom = document.getElementById('btn-random');
 const timerControls = document.getElementById('timer-controls');
 const modal = document.getElementById('result-modal');
 const resultForm = document.getElementById('result-form');
+const resetModal = document.getElementById('reset-modal');
+const resetForm = document.getElementById('reset-form');
 
 const btnC  = document.getElementById('btn-c');
 const btnPy = document.getElementById('btn-py');
@@ -106,7 +108,31 @@ function stopQuestionAnimation() {
   }
 }
 
-function resetTimer() {
+function openResetModal() {
+  if (modal && modal.classList.contains('active')) {
+    modal.classList.remove('active');
+  }
+
+  if (resetModal) {
+    const resetPasswordInput = document.getElementById('reset-password');
+    resetPasswordInput && (resetPasswordInput.value = '');
+    resetModal.classList.add('active');
+    resetPasswordInput && resetPasswordInput.focus();
+  }
+}
+
+function closeResetModal() {
+  if (resetModal) {
+    resetModal.classList.remove('active');
+  }
+}
+
+function resetTimer(password) {
+  if (!password) {
+    alert('Password is required to clear leaderboard data.');
+    return;
+  }
+
   running = false;
   clearInterval(timerInterval);
   elapsed = 0;
@@ -116,16 +142,29 @@ function resetTimer() {
   if (statusText) statusText.textContent = 'Ready';
   
   // Dispatches reset signal to the server backend database layout
-  fetch('/api/reset', { method: 'POST' })
-    .then(() => {
-      // FIX: Wipe the local global storage array clean immediately
+  fetch('/api/reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status !== 'ok') {
+        throw new Error(data.message || 'Clear failed');
+      }
+
+      // Wipe the local global storage array clean immediately
       globalLeaderboardCache = [];
       
       // Update both UI views to reflect the freshly wiped cache
       renderMasterBoard(globalLeaderboardCache);
       renderSubBoard(globalLeaderboardCache, selectedLang);
+      closeResetModal();
     })
-    .catch(err => console.error('Error clearing remote storage:', err));
+    .catch(err => {
+      alert('Error clearing remote storage: ' + err.message);
+      console.error('Error clearing remote storage:', err);
+    });
 }
 
 /* ==========================================================================
@@ -145,7 +184,7 @@ document.getElementById('btn-cancel').addEventListener('click', () => {
   if (btnRandom) btnRandom.disabled = false;
 });
 
-// Modal mask target safety click-away layer rule
+// Modal mask target safety click-away layer rule for save modal
 modal.querySelector('.modal-overlay')?.addEventListener('click', () => {
   modal.classList.remove('active');
   stopQuestionAnimation();
@@ -155,6 +194,11 @@ modal.querySelector('.modal-overlay')?.addEventListener('click', () => {
   if (passwordInput) passwordInput.value = '';
   if (timerControls) timerControls.style.display = 'none';
   if (btnRandom) btnRandom.disabled = false;
+});
+
+// Modal mask target safety click-away layer rule for reset modal
+resetModal?.querySelector('.modal-overlay')?.addEventListener('click', () => {
+  closeResetModal();
 });
 
 // Random picker: animate for ~3s then reveal start/stop controls
@@ -316,8 +360,19 @@ btnStop.addEventListener('click', stopTimer);
 
 document.getElementById('btn-reset').addEventListener('click', () => {
   if (confirm('Clear all leaderboard data?')) {
-    resetTimer();
+    openResetModal();
   }
+});
+
+const resetCancel = document.getElementById('btn-reset-cancel');
+resetCancel?.addEventListener('click', () => {
+  closeResetModal();
+});
+
+resetForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const password = document.getElementById('reset-password')?.value.trim();
+  resetTimer(password);
 });
 
 // Consolidated Language Toggles (Duplicate removed)

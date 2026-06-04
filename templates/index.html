@@ -131,6 +131,26 @@
     </div>
   </div>
 
+  <div class="modal" id="reset-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>Clear Leaderboard</h2>
+      </div>
+      <form id="reset-form" class="modal-form">
+        <p>Enter the password to confirm clearing all leaderboard data.</p>
+        <div class="form-field">
+          <label for="reset-password">Password</label>
+          <input type="password" id="reset-password" placeholder="Enter password" required autocomplete="off" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-action cancel" id="btn-reset-cancel">Cancel</button>
+          <button type="submit" class="btn-action save">Clear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

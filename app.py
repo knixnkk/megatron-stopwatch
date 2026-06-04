@@ -106,6 +106,11 @@ def save_result():
 def api_reset():
     """Clear all leaderboard data"""
     try:
+        data = request.get_json(force=True, silent=True) or {}
+        password = (data.get("password") or "").strip()
+        if password != SAVE_PASSWORD:
+            return jsonify({"status": "error", "message": "Invalid password"}), 401
+
         # Deletes every document out of the collection
         leaderboard_collection.delete_many({})
         return jsonify({"status": "ok", "message": "Leaderboard cleared."})
