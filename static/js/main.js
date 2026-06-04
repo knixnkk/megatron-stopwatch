@@ -419,4 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (timerControls) timerControls.style.display = 'none';
   if (btnRandom) btnRandom.disabled = false;
   refreshLeaderboard();
+
+  // Poll leaderboard every 5 seconds so other devices stay in sync.
+  window.setInterval(refreshLeaderboard, 5000);
 });
