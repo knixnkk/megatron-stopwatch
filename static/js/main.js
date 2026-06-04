@@ -76,15 +76,15 @@ function stopTimer() {
 }
 
 /**
- * Starts the animated question picker which cycles random numbers 00-20
+ * Starts the animated question picker which cycles random numbers Q01-Q20
  * and displays them in the `question-no` field while the modal is open.
  */
 function startQuestionAnimation() {
   const qInput = document.getElementById('question-no');
   if (!qInput) return;
 
-  // ensure we have an initial value
-  currentQuestionNumber = Math.floor(Math.random() * 21);
+  // ensure we have an initial value within Q01–Q20
+  currentQuestionNumber = Math.floor(Math.random() * 20) + 1;
   const questionString = `Q${String(currentQuestionNumber).padStart(2, '0')}`;
   qInput.value = questionString;
   if (timerDisplay) timerDisplay.textContent = questionString;
@@ -92,7 +92,7 @@ function startQuestionAnimation() {
   // Quick randomized flicker to mimic a matrix-like runner
   stopQuestionAnimation();
   questionAnimInterval = setInterval(() => {
-    currentQuestionNumber = Math.floor(Math.random() * 21);
+    currentQuestionNumber = Math.floor(Math.random() * 20) + 1;
     const randomQuestionString = `Q${String(currentQuestionNumber).padStart(2, '0')}`;
     qInput.value = randomQuestionString;
     if (timerDisplay) timerDisplay.textContent = randomQuestionString;
